@@ -1,0 +1,30 @@
+- name: install required packages
+  apt:
+    pkg: ca-certificates
+    state: present
+
+- name: ensure directory exests
+  file:
+    path: /usr/share/postgresql-common/pgdg
+    state: directory
+
+- name: import the repository signing key
+  get_url:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    dest: /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
+    mode: '0644'
+
+- name: create the repository conf file
+  apt_repository:
+    repo: "{{ postgresql_apt_repository }}"
+    state: present
+
+- name: install postgresql
+  apt:
+    name:
+      - "postgresql-{{postgresql_version}}"
+      - "postgresql-client-{{postgresql_version}}"
+      - "postgresql-contrib-{{postgresql_version}}"
+    state: present
+    update_cache: yes
+

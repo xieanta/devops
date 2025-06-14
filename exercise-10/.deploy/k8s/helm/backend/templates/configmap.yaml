@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-config
+data:
+  POSTGRES_SERVER_HOST: "postgres-postgresql"
+  POSTGRES_USER: "worker"
+  POSTGRES_DB: "app"
+  CLIENT_URL: "http://frontend-service.workshop2024.svc.cluster.local"
+  SERVER_PORT: ":8081"
+  RUN_MIGRATION: "true"
+  

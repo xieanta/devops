@@ -1,0 +1,8 @@
+gitlabUrl: https://gitlab.com/
+runnerRegistrationToken: # your token
+namespace: gitlab-runner
+rbac: 
+  create: true 
+serviceAccountName: 
+  create: true
+  

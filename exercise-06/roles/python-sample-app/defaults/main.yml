@@ -1,0 +1,6 @@
+---
+# defaults file for python-sample-app
+user_name: flask_user
+user_pass: flask_pass
+dbname: flask_db
+        

@@ -1,0 +1,39 @@
+- name: Read-write git checkout from github
+  git:
+    repo: https://github.com/mbaran0v/python-sample-app.git
+    dest: my_app/
+    update: no
+
+- name: Create virtual environment
+  command: python3.8 -m venv my_app/venv
+  args:
+    creates: my_app/venv
+
+- name: Activate venv and install dependencies
+  shell: |
+    source /my_app/venv/bin/activate
+    /home/vagrant/my_app/venv/bin/pip3.8 install -r /home/vagrant/my_app/requirements.txt
+  args:
+    chdir: my_app/  
+
+- name: Run database migration
+  command: venv/bin/flask db upgrade
+  args:
+    chdir: /home/vagrant/my_app/
+  become: yes
+  environment:
+    FLASK_APP: app.py
+    POSTGRESQL_URL: "postgresql://{{ user_name }}:{{ user_pass }}@localhost/{{ dbname }}"
+
+- name: Copy my_app.service.ini to /etc/systemd/system/
+  copy:
+    src: my_app.service.ini
+    dest: /etc/systemd/system/my_app.service
+  become: yes
+
+- name: Start my_app service
+  systemd:
+    name: my_app
+    state: started
+    enabled: yes
+

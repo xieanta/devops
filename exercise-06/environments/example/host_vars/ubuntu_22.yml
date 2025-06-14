@@ -1,0 +1,77 @@
+postgresql_listen_addresses: "*"
+
+postgresql_apt_py3_dependencies: ["python3-psycopg2", "locales"]
+postgresql_apt_py2_dependencies: ["python-psycopg2", "python-pycurl", 
+"locales"]
+postgresql_apt_dependencies: "{{postgresql_apt_py3_dependencies}}"
+
+postgresql_max_connections: 20
+postgresql_shared_buffers: 512MB
+postgresql_effective_cache_size: 1536MB
+postgresql_maintenance_work_mem: 128MB
+postgresql_checkpoint_completion_target: 0.9
+postgresql_wal_buffers: 16MB
+postgresql_default_statistics_target: 100
+postgresql_random_page_cost: 1.1
+postgresql_effective_io_concurrency: 200
+postgresql_work_mem: 13107kB
+postgresql_huge_pages: off
+postgresql_max_wal_size: 1GB        
+postgresql_min_wal_size: 4GB
+
+postgresql_pg_hba_trust_hosts: [127.0.0.1/32]
+
+postgresql_pg_hba_default:
+  - type: local
+    database: all
+    user: all
+    address: ""
+    method: "{{ postgresql_default_auth_method }}"
+    comment: '"local" is for Unix domain socket connections only' 
+  - type: host
+    database: all
+    user: all
+    address: "127.0.0.1/32" 
+    method: "{{ postgresql_default_auth_method_hosts }}"
+    comment: "IPv4 local connections:"
+  - type: host
+    database: all
+    user: all
+    address: "::1/128"     
+    method: "{{ postgresql_default_auth_method_hosts }}"
+    comment: "IPv6 local connections:"
+  - type: local
+    database: all
+    user: "{{ postgresql_admin_user }}"
+    address: ""
+    method: "peer map=root_as_{{ postgresql_admin_user }}" 
+    comment: "Local root Unix user, passwordless access"
+  - type: host
+    database: all
+    user: "{{ postgresql_admin_user }}"
+    address: "::1/128"
+    method: "md5"
+    comment: "root Unix userpasswordless access" 
+  - type: host
+    database: all
+    user: "{{ postgresql_admin_user }}" 
+    address: "127.0.0.1/32"
+    method: "md5"
+    comment: " root Unix user, passwordless access"
+
+
+# List of databases to be created (optional)
+postgresql_databases: 
+  - name: flask_db
+    owner: flask_user      # optional; specify the owner of the database
+
+
+# List of users to be created (optional)
+postgresql_users: 
+  - name: flask_user
+    pass: flask_pass
+    encrypted: yes 
+    state: present
+
+postgresql_tune: no
+

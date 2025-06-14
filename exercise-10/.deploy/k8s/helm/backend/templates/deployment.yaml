@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.pod.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.pod.name }}
+    spec:
+      hostname: {{ .Values.pod.name }}
+      containers:
+      - name: {{ .Chart.Name }}
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        ports:
+        - containerPort: {{ .Values.service.port }}
+          name: backend-port
+        resources:
+          requests:
+            memory: {{ .Values.resources.requests.memory }}
+            cpu: {{ .Values.resources.requests.cpu }}
+          limits:
+            memory: {{ .Values.resources.limits.memory }}
+            cpu: {{ .Values.resources.limits.cpu }}
+        env:
+        {{- range .Values.env }}
+        - name: {{ .name }}
+          {{- if .valueFrom }}
+          valueFrom:
+            {{- if .valueFrom.configMapKeyRef }}
+            configMapKeyRef:
+              name: {{ .valueFrom.configMapKeyRef.name }}
+              key: {{ .valueFrom.configMapKeyRef.key }}
+            {{- else if .valueFrom.secretKeyRef }}
+            secretKeyRef:
+              name: {{ .valueFrom.secretKeyRef.name }}
+              key: {{ .valueFrom.secretKeyRef.key }}
+            {{- end }}
+          {{- else }}
+          value: {{ .value }}
+          {{- end }}
+        {{- end }}
+        

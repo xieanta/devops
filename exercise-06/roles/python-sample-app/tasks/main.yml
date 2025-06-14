@@ -1,0 +1,6 @@
+---
+# tasks file for python-sample-app
+
+- import_tasks: install_python3.8.yml
+ 
+- import_tasks: run_app.yml 

@@ -1,0 +1,24 @@
+include:
+  - project: 'simbirsoft1/devops-workshop-2024-12/natalia.zaitseva/exercise-011/deploy-app'
+    file:
+    - 'autodevops-template.yml'
+  
+.tags_anchor: &tags_anchor
+    tags:
+        - backend
+
+
+variables:
+  APP_HELM_CHART: '.deploy/helm/backend'
+  DOCKER_HUB_IMAGE: 'nzaitseva/backend'
+
+
+Hadolint:
+  <<: *tags_anchor
+
+Build:
+  <<: *tags_anchor
+
+Deploy:
+  <<: *tags_anchor
+

@@ -1,0 +1,28 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+ENV['VAGRANT_SERVER_URL'] = 'https://vagrant.elab.pro'
+Vagrant.configure("2") do |config|
+  config.vm.network "private_network", ip: "192.168.56.4"
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.hostname = "testxmachine" 
+  config.vm.provision "file", source: "~/.ssh/vagrant.pub", destination: 
+"~/.ssh/vagrant.pub"
+
+  config.vm.provision "ansible" do |ansible|
+     ansible.limit = "all"
+     ansible.playbook = "site.yml"
+     ansible.inventory_path = "environments/example/inventory.yml"
+     ansible.config_file = "ansible.cfg"   
+  end
+                                   
+
+  config.vm.provider "virtualbox" do |vb|
+     vb.memory = "2048"
+     vb.cpus = 2
+  end
+end  
+
+
+
+

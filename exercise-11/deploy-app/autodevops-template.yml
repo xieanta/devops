@@ -1,0 +1,80 @@
+.tags_anchor: &tags_anchor
+    tags:
+        - example
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
+variables:
+    APP_DOCKERFILE: '.deploy/docker/Dockerfile'
+    DOCKER_HUB_REGISTRY: 'https://index.docker.io/v1/'
+    DOCKER_HUB_USERNAME: $DOCKER_HUB_USERNAME
+    DOCKER_HUB_PASSWORD: $DOCKER_HUB_PASSWORD
+    NAMESPACE: "workshop2024"
+
+stages:
+    - lint
+    - build
+    - deploy
+
+Hadolint:
+    <<: *tags_anchor
+    stage: lint
+    image: hadolint/hadolint:v2.12.0-alpine
+    script:
+        - hadolint ${APP_DOCKERFILE}
+
+Build:
+  <<: *tags_anchor
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [""]
+  before_script:
+    - env | sort
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"${DOCKER_HUB_REGISTRY}\":{\"auth\":\"$(echo -n ${DOCKER_HUB_USERNAME}:${DOCKER_HUB_PASSWORD} | base64)\"}}}" > /kaniko/.docker/config.json
+    - cat /kaniko/.docker/config.json
+  script:
+    - export UNIQUE_TAG="${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHA:0:7}-${CI_PIPELINE_ID}"
+    - echo "${UNIQUE_TAG}" > unique_tag.txt
+    - /kaniko/executor
+        --cache=true
+        --cache-ttl 720h
+        --cache-repo "${DOCKER_HUB_IMAGE}"
+        --context "${CI_PROJECT_DIR}"
+        --dockerfile "${APP_DOCKERFILE}"
+        --destination "${DOCKER_HUB_IMAGE}:${UNIQUE_TAG}"
+  artifacts:
+    paths:
+      - unique_tag.txt 
+
+
+Deploy:
+  <<: *tags_anchor
+  stage: deploy
+  image:
+    name: alpine/helm:3.12.0
+    entrypoint: [""]
+  variables: 
+    KUBECONFIG: .kubeconfig
+  before_script:
+    - echo "${KUBECONFIG_FILE}" | base64 -d > "${KUBECONFIG}"
+    - chmod 0600 "${KUBECONFIG}"
+    - export UNIQUE_TAG=$(cat unique_tag.txt)
+  script:
+    - helm upgrade --install ${CI_PROJECT_NAME} ${APP_HELM_CHART}
+      --set image.repository="${DOCKER_HUB_IMAGE}"
+      --set image.tag=${UNIQUE_TAG}
+      --create-namespace
+      --namespace ${NAMESPACE}
+      --atomic
+      --install
+      -f ${APP_HELM_CHART}/values.yaml
+  dependencies:
+    - Build
+    
+

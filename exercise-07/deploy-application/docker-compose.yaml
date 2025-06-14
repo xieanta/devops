@@ -1,0 +1,46 @@
+version: '3.8'
+services:
+  db:
+    container_name: "go_db"
+    image: postgres:16-alpine
+    restart: always
+    healthcheck: 
+      test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    networks:
+      - go-app_default
+    volumes:
+      - db-data:/var/lib/postgresql/data
+  app:
+    container_name: "go_backend"
+    image: nzaitseva/backend:latest
+    env_file: ".env"
+    depends_on:
+      - db
+    ports:
+     - 8081:8081
+    networks:
+      - go-app_default
+  front_app:
+    container_name: "react_frontend"
+    image: nzaitseva/frontend:latest
+    depends_on:
+      - app
+    ports:
+      - 3000:3000
+    networks:
+      - go-app_default
+      
+networks:
+  go-app_default:
+volumes:
+  db-data:
+  nginx.conf:

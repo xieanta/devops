@@ -1,0 +1,8 @@
+---
+- name: install postgres 14
+  hosts: all
+  become: true
+  roles:
+   - role: example_role
+
+
